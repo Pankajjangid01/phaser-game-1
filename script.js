@@ -12,6 +12,7 @@ const config = {
 };
 
 let ball;
+let ballVelocityX;
 let ballVelocityY;
 let sessionTimer;
 let countdown = 0;
@@ -25,11 +26,13 @@ let currentStartTime = document.getElementById("currentStartTime");
 let currentEndTime = document.getElementById("currentEndTime");
 
 let clockSound;
-
 const game = new Phaser.Game(config);
 
-const minHeight = 250;
-const maxHeight = 475;
+const minHeight = 20;
+const maxHeight = 480;
+const maxVelocity = 300; 
+const minSpeed = 100; 
+const speedIncrement = 20; 
 
 function preload() {
   this.load.audio("clock", "./assets/clock.mp3");
@@ -37,7 +40,8 @@ function preload() {
 
 function create() {
   ball = this.add.circle(400, 250, 20, 0xff0000);
-  ballVelocityY = Phaser.Math.Between(100, 200);
+  ballVelocityX = Phaser.Math.Between(50, 100); 
+  ballVelocityY = Phaser.Math.Between(100, 150); 
   countdownText = this.add.text(10, 10, "Counter: 0", {
     fontSize: "20px",
     fill: "#FFFFFF",
@@ -52,10 +56,23 @@ function create() {
 
 function update(time, delta) {
   if (activeSession) {
+    ball.x += (ballVelocityX * delta) / 1000;
     ball.y += (ballVelocityY * delta) / 1000;
-    if (ball.y <= minHeight || ball.y >= maxHeight) {
-      ballVelocityY = Math.sign(ballVelocityY) * Math.abs(ballVelocityY) * -1;
+
+    if (ball.x <= 20 || ball.x >= 780) {
+      ballVelocityX = -ballVelocityX; 
+      ballVelocityX += Phaser.Math.Between(-20, 20); 
+      increaseSpeed(); 
     }
+
+    if (ball.y <= minHeight || ball.y >= maxHeight) {
+      ballVelocityY = -ballVelocityY; 
+      ballVelocityY += Phaser.Math.Between(-20, 20); 
+      increaseSpeed(); 
+    }
+
+    ballVelocityX = Phaser.Math.Clamp(ballVelocityX, -maxVelocity, maxVelocity);
+    ballVelocityY = Phaser.Math.Clamp(ballVelocityY, -maxVelocity, maxVelocity);
   }
 }
 
@@ -100,4 +117,20 @@ function endSession() {
   sessionLogs.appendChild(li);
   activeSession = null;
   countdownText.setText("Counter: 0");
+}
+
+function increaseSpeed() {
+  if (Math.abs(ballVelocityX) < maxVelocity) {
+    ballVelocityX += (ballVelocityX > 0 ? 1 : -1) * speedIncrement;
+  }
+  if (Math.abs(ballVelocityY) < maxVelocity) {
+    ballVelocityY += (ballVelocityY > 0 ? 1 : -1) * speedIncrement;
+  }
+
+  if (Math.abs(ballVelocityX) < minSpeed) {
+    ballVelocityX = (ballVelocityX > 0 ? 1 : -1) * minSpeed;
+  }
+  if (Math.abs(ballVelocityY) < minSpeed) {
+    ballVelocityY = (ballVelocityY > 0 ? 1 : -1) * minSpeed;
+  }
 }
